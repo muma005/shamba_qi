@@ -1,0 +1,4 @@
+# Project Requirements
+pandas
+numpy
+tqdm
