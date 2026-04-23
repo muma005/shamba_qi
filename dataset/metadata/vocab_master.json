@@ -1,0 +1,23 @@
+{
+  "crops": {
+    "Mahindi": { "en": "Maize", "scientific": "Zea mays" },
+    "Maharage": { "en": "Beans", "scientific": "Phaseolus vulgaris" },
+    "Mpunga": { "en": "Rice", "scientific": "Oryza sativa" },
+    "Ngano": { "en": "Wheat", "scientific": "Triticum aestivum" },
+    "Viazi": { "en": "Potatoes", "scientific": "Solanum tuberosum" },
+    "Nyanya": { "en": "Tomatoes", "scientific": "Solanum lycopersicum" },
+    "Vitunguu": { "en": "Onions", "scientific": "Allium cepa" },
+    "Kahawa": { "en": "Coffee", "scientific": "Coffea arabica" },
+    "Chai": { "en": "Tea", "scientific": "Camellia sinensis" },
+    "Ndizi": { "en": "Bananas", "scientific": "Musa spp." },
+    "Mihogo": { "en": "Cassava", "scientific": "Manihot esculenta" },
+    "Mtama": { "en": "Sorghum", "scientific": "Sorghum bicolor" }
+  },
+  "high_alert_pests": {
+    "Viwavi Jeshi Vamizi": { "en": "Fall Armyworm", "scientific": "Spodoptera frugiperda" },
+    "Tuta Absoluta": { "en": "Tomato Leaf Miner", "scientific": "Tuta absoluta" },
+    "Kutu ya Ngano": { "en": "Wheat Rust", "scientific": "Puccinia graminis" },
+    "Mnyauko wa Mahindi": { "en": "Maize Lethal Necrosis", "scientific": "MLN" },
+    "Nzige wa Jangwani": { "en": "Desert Locust", "scientific": "Schistocerca gregaria" }
+  }
+}
