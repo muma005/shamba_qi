@@ -70,21 +70,21 @@ def main():
                             "source_type": "transcript_segment"
                         })
 
-    # Batch 3: Skip segments used in Batch 1 & 2
-    OFFSET = 337 
+    # Batch 4: Skip segments used in Batch 1, 2, & 3
+    OFFSET = 435 
     segments = segments[OFFSET:]
     
     # Counters for distribution
     crop_counts = {c: 0 for c in CROP_VOCAB.keys()}
     total_generated = 0
     
-    # Append mode for Batch 3
+    # Append mode for Batch 4
     with open(OUTPUT_PATH, "a", encoding="utf-8") as f_out:
         for seg in segments:
             crop = seg.get("crop_sw", "unknown")
             if crop not in CROP_VOCAB: continue
             
-            # Batch 3 Strategy: EXCLUDE Mahindi to rebalance the 30% cap
+            # Continue EXCLUDING Mahindi to balance the 30% cap
             if crop == "Mahindi":
                 continue
             
@@ -108,7 +108,7 @@ def main():
                 crop_counts[crop] += 1
                 total_generated += 1
                 
-            if total_generated >= 500: break # Batch 3 target
+            if total_generated >= 500: break # Batch 4 target
 
     print(f"\nBatch 2 Execution Complete!")
     print(f"Total New QA Pairs Generated: {total_generated}")
