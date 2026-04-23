@@ -52,8 +52,6 @@ Classify the pest/disease/problem into exactly one of these 11 categories:
 | `storage_pest` | Post-harvest: holes in grain, powder in bags, weevils |
 | `general_management` | No specific pest — crop rotation, soil prep, IPM overview, seed selection |
 
-**When in doubt between categories:** Choose the category that matches the ROOT CAUSE described in the answer, not the symptom the farmer describes. If the farmer thinks it's a disease but the expert identifies nutrient deficiency, label `nutrient_deficiency`.
-
 ---
 
 ## Label 3: Pest/Disease
@@ -61,16 +59,15 @@ Classify the pest/disease/problem into exactly one of these 11 categories:
 Identify the specific pest or disease from the controlled vocabulary (`dataset/metadata/pest_disease_vocab.json`).
 
 - Use the Swahili name as listed in the vocabulary
-- If the pest/disease is not in the vocabulary, add it and note the addition
 - If the answer discusses differential diagnosis (could be X or Y), label the first/most-likely one and reduce `confidence`
 
 ---
 
 ## Label 4: Severity
 
-See [severity_rubric.md](severity_rubric.md) for the full rubric with examples.
+See the Severity Rubric below for levels.
 
-**Critical rule:** Severity is based on the SCENARIO DESCRIBED in this specific QA pair, NOT the worst-case potential of the pest. A small early-stage Fall Armyworm sighting = `medium`. A full-blown Fall Armyworm outbreak destroying the field = `critical`.
+**Critical rule:** Severity is based on the SCENARIO DESCRIBED in this specific QA pair, NOT the worst-case potential of the pest.
 
 ---
 
@@ -78,29 +75,29 @@ See [severity_rubric.md](severity_rubric.md) for the full rubric with examples.
 
 | Value | Indicators |
 |-------|-----------|
-| `kenyan_swahili` | Kenya-specific terms, Kenyan farming context, references to Kenya locations/institutions |
+| `kenyan_swahili` | Kenya-specific terms, Kenyan farming context |
 | `tanzanian_swahili` | Tanzania-specific terms, Tanzanian farming context |
 | `standard` | Neutral formal Swahili, no strong dialect markers |
 
 ---
 
-## Label 6: Confidence
+## Severity Rubric
+Enforce the following levels strictly during adjudication:
+* **Low**: Cosmetic damage, < 5% loss. No immediate threat to food security.
+* **Medium**: 5–20% loss, localized. Requires standard integrated pest management (IPM).
+* **High**: 20–50% loss, active spread. Immediate intervention required.
+* **Critical**: > 50% loss or quarantine pests (e.g., Desert Locust, Maize Lethal Necrosis). Threat to livelihood/food security.
 
-Rate your own confidence in the labels you assigned:
-
-| Score | Meaning |
-|-------|---------|
-| 0.9–1.0 | Very confident — clear crop, clear pest, unambiguous severity |
-| 0.7–0.89 | Confident — most labels clear, minor ambiguity on one |
-| 0.5–0.69 | Moderate — some labels uncertain, could reasonably be labeled differently |
-| Below 0.5 | Low — significant uncertainty, flag for adjudication |
+## Edge Case Resolution
+* **Ambiguous Symptoms**: If symptoms could indicate multiple diseases, the answer must provide broad advice or request further clarification. Confidence scores should be < 0.8.
+* **Dialect Handling**: 'kenyan_swahili' vs 'tanzanian_swahili' must be tagged based on regional terminology (e.g., "dawa ya kunyunyizia" is typical in Kenyan advisory).
+* **Scientific Alignment**: Always cross-reference Swahili common names with the scientific names in `vocab_master.json`.
 
 ---
 
 ## General Rules
 
-1. **One primary crop per QA pair.** Do not list multiple crops.
-2. **One primary pest/disease per QA pair.** If multiple are mentioned, label the primary one.
-3. **Preserve the original text.** Do not modify `question_sw` or `answer_sw` during annotation. If you find errors, flag them in a comment — do not fix inline.
-4. **When in doubt, flag.** Set confidence below 0.5 and add a note. It's better to flag than to guess.
-5. **Refer to edge cases.** Check [edge_cases.md](edge_cases.md) if your situation isn't covered above.
+1. **One primary crop per QA pair.**
+2. **One primary pest/disease per QA pair.**
+3. **Preserve the original text.**
+4. **When in doubt, flag.**

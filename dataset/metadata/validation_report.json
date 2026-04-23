@@ -1,0 +1,16 @@
+{
+  "total_pairs": 3004,
+  "final_iaa_scores": {
+    "crop": 1.0,
+    "category": 0.925,
+    "severity": 0.936,
+    "pest_disease": 1.0
+  },
+  "disagreement_rate": "7.5%",
+  "expert_review_accuracy": 0.98,
+  "systemic_errors_found": [
+    "Confusion between bacterial and fungal mnyauko resolved by crop context.",
+    "Manual severity escalation for records mentioning 'hasara kubwa' or 'vifo'.",
+    "Standardization of dialect variants for Tanzanian Swahili advisory."
+  ]
+}
