@@ -32,18 +32,20 @@ def extract_exchanges(video_id):
     
     segments = data["segments"]
     
-    # Step 4 logic: Resolve 'unknown' speakers if they are between clear roles
-    for i in range(1, len(segments) - 1):
-        if segments[i]["speaker"] == "unknown":
-            if segments[i-1]["speaker"] == "farmer" and segments[i+1]["speaker"] == "farmer":
-                segments[i]["speaker"] = "farmer"
-            elif segments[i-1]["speaker"] == "expert" and segments[i+1]["speaker"] == "expert":
-                segments[i]["speaker"] = "expert"
+    # Loosened Speaker Heuristics for 'base' model
+    for i in range(len(segments)):
+        text = segments[i]["text"].lower()
+        if any(kw in text for kw in ["nimeona", "shamba", "nisaidie", "tatizo", "kwangu"]):
+            segments[i]["speaker"] = "farmer"
+        elif any(kw in text for kw in ["dawa", "ugonjwa", "shauri", "muhimu", "udhibiti"]):
+            segments[i]["speaker"] = "expert"
 
     exchanges = []
     current_exchange = {"farmer": [], "expert": [], "start": None, "end": None, "crop": None}
     
-    for seg in segments:
+    # Extraction Logic: Look for Farmer describing then Expert advising
+    for i in range(len(segments)):
+        seg = segments[i]
         speaker = seg["speaker"]
         text = seg["text"]
         
@@ -54,13 +56,25 @@ def extract_exchanges(video_id):
             if not current_exchange["start"]: current_exchange["start"] = seg["start"]
             current_exchange["farmer"].append(text)
             if not current_exchange["crop"]: current_exchange["crop"] = detect_crop(text)
+                
         elif speaker == "expert" and current_exchange["farmer"]:
-            current_expert = current_exchange["expert"]
-            current_expert.append(text)
+            current_exchange["expert"].append(text)
             current_exchange["end"] = seg["end"]
-        elif speaker == "presenter" and current_exchange["farmer"] and current_exchange["expert"]:
-            exchanges.append(current_exchange)
-            current_exchange = {"farmer": [], "expert": [], "start": None, "end": None, "crop": None}
+
+    # Final Catch: If we have text but no clear tagging, use windows of 5 segments
+    if not exchanges:
+        print(f"Fallback: Heuristics failed for {video_id}, using windowing...")
+        for i in range(0, len(segments)-5, 5):
+            win_text = " ".join([s["text"] for s in segments[i:i+5]])
+            crop = detect_crop(win_text)
+            if crop != "unknown":
+                exchanges.append({
+                    "farmer": [segments[i]["text"]],
+                    "expert": [" ".join([s["text"] for s in segments[i+1:i+5]])],
+                    "start": segments[i]["start"],
+                    "end": segments[i+4]["end"],
+                    "crop": crop
+                })
 
     if current_exchange["farmer"] and current_exchange["expert"]:
         exchanges.append(current_exchange)

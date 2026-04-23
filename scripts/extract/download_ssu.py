@@ -5,8 +5,7 @@ from datetime import datetime
 from catalog_source import log_source
 
 TIER_1_IDS = [
-    "byVKUAg0Wb4", "PUYNaTtpulo", "2IGU-VEwI9Y", "kWy4ezP2qzA", 
-    "cjaRdCcJwzw", "_vcAnxB0QmY", "f2FIQY2f5k8"
+    "LXRQbdnm1rY", "o5u36eOFj-g", "tSkUmZDWRZU", "dWPuTIMZC-k", "7F2Viukl34M"
 ]
 
 PODCAST_EPISODES = [

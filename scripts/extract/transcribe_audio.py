@@ -102,13 +102,13 @@ def main():
     print(f"Loading Whisper model on {device}...")
     model = WhisperModel("base", device=device, compute_type=compute_type)
     
-    # Process one file for testing
-    files = [f for f in os.listdir(AUDIO_DIR) if f.endswith((".webm", ".wav", ".m4a", ".mp3"))]
-    if files:
-        f = files[0]
-        video_id = os.path.splitext(f)[0]
-        if not os.path.exists(os.path.join(TRANSCRIPT_DIR, f"{video_id}_corrected.json")):
-            transcribe_file(model, f)
+    # Process all webm/wav/m4a files in directory
+    for f in os.listdir(AUDIO_DIR):
+        if f.endswith((".webm", ".wav", ".m4a", ".mp3")):
+            # Check if already transcribed to avoid redundant work
+            video_id = os.path.splitext(f)[0]
+            if not os.path.exists(os.path.join(TRANSCRIPT_DIR, f"{video_id}_corrected.json")):
+                transcribe_file(model, f)
 
 if __name__ == "__main__":
     main()
