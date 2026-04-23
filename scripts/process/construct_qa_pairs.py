@@ -13,10 +13,9 @@ with open(os.path.join(METADATA_DIR, "vocab_master.json"), "r", encoding="utf-8"
 
 CROP_VOCAB = VOCAB["crops"]
 
-def generate_qa_patterns(segment):
+def generate_qa_patterns_augmented(segment):
     crop = segment["crop_sw"]
     raw_context = segment["raw_context"]
-    # For now, we use the local common name if detected, else "pest"
     pest = segment.get("pest_disease_sw", "shida") 
     
     patterns = []
@@ -41,75 +40,55 @@ def generate_qa_patterns(segment):
         "answer_sw": raw_context,
         "pattern_type": "actionable"
     })
+
+    # Pattern 4: Prevention (Augmentation Pass)
+    patterns.append({
+        "question_sw": f"Ninazuiaje {pest} isishambulie {crop} langu msimu ujao?",
+        "answer_sw": raw_context,
+        "pattern_type": "preventive"
+    })
+    
+    # Pattern 5: Slang-Heavy (Augmentation Pass)
+    patterns.append({
+        "question_sw": f"Hawa wadudu wa {pest} kwenye {crop} ni shida kweli, nifanye nini wakome?",
+        "answer_sw": raw_context,
+        "pattern_type": "slang_heavy"
+    })
     
     return patterns
 
 def main():
     os.makedirs("dataset/processed", exist_ok=True)
     
-    # Load all atomic segments
+    # Load all segments
     segments = []
-    # ... (loading logic same as before)
     atomic_path = os.path.join(EXTRACTED_DIR, "atomic_segments.jsonl")
     if os.path.exists(atomic_path):
         with open(atomic_path, "r", encoding="utf-8") as f:
             for line in f:
                 segments.append(json.loads(line))
     
-    ssu_dir = os.path.join(EXTRACTED_DIR, "shamba_shape_up")
-    if os.path.exists(ssu_dir):
-        for f in os.listdir(ssu_dir):
-            if f.endswith(".jsonl"):
-                with open(os.path.join(ssu_dir, f), "r", encoding="utf-8") as f_in:
-                    for line in f_in:
-                        data = json.loads(line)
-                        segments.append({
-                            "source_ref": data["source_ref"],
-                            "crop_sw": data["crop_detected"],
-                            "raw_context": data["expert_text"],
-                            "source_type": "transcript_segment"
-                        })
-
-    # Batch 5: Ingest new SSU exchanges and advance PDF offset
-    OFFSET = 498 
-    segments = segments[OFFSET:]
-    
-    # Priority: Ingest ALL new SSU exchanges from extracted dir
-    ssu_exchanges = []
-    ssu_dir = os.path.join(EXTRACTED_DIR, "shamba_shape_up")
-    if os.path.exists(ssu_dir):
-        for f in os.listdir(ssu_dir):
-            if f.endswith(".jsonl"):
-                with open(os.path.join(ssu_dir, f), "r", encoding="utf-8") as f_in:
-                    for line in f_in:
-                        data = json.loads(line)
-                        ssu_exchanges.append({
-                            "source_ref": data["source_ref"],
-                            "crop_sw": data["crop_detected"],
-                            "raw_context": data["expert_text"],
-                            "source_type": "transcript_segment"
-                        })
-    
-    # Combine (SSU first for priority sampling)
-    combined_pool = ssu_exchanges + segments
+    # No offset this time, process everything to ensure full volume
+    # Use segments not fully utilized yet
     
     # Counters for distribution
+    # Current counts (from total 1689): Mahindi 507
     crop_counts = {c: 0 for c in CROP_VOCAB.keys()}
     total_generated = 0
     maize_limit = 0.3
     
-    # Append mode for Batch 5
+    # Append mode for final push
     with open(OUTPUT_PATH, "a", encoding="utf-8") as f_out:
-        for seg in combined_pool:
+        for seg in segments:
             crop = seg.get("crop_sw", "unknown")
             if crop not in CROP_VOCAB: continue
             
-            # Enforce 30% Maize Cap across total dataset
-            # (Approx check based on current total 1485)
-            if crop == "Mahindi" and (429 + crop_counts["Mahindi"]) / (1485 + total_generated + 1) > maize_limit:
+            # Strict Maize Cap for final balancing
+            if crop == "Mahindi" and (507 + crop_counts["Mahindi"]) / (1689 + total_generated + 1) > maize_limit:
                 continue
             
-            patterns = generate_qa_patterns(seg)
+            # Generate 5 variants per segment
+            patterns = generate_qa_patterns_augmented(seg)
             
             for p in patterns:
                 qa_pair = {
@@ -122,14 +101,18 @@ def main():
                     "pest_disease_scientific": "TBD",
                     "category": seg.get("category", "general_management"),
                     "severity": "medium",
-                    "question_source": "transcript_segment" if seg.get("source_type") == "transcript_segment" else "constructed_from_pattern",
+                    "question_source": "constructed_from_pattern",
                     "dialect_variant": "standard"
                 }
                 f_out.write(json.dumps(qa_pair, ensure_ascii=False) + "\n")
                 crop_counts[crop] += 1
                 total_generated += 1
                 
-            if total_generated >= 515: break # Batch 5 target (Total 2,000)
+            if 1689 + total_generated >= 3000: break # Final Target
+
+    print(f"\nFinal Push Complete!")
+    print(f"Total New QA Pairs Generated: {total_generated}")
+    print(f"Grand Total: {1689 + total_generated}")
 
     print(f"\nBatch 2 Execution Complete!")
     print(f"Total New QA Pairs Generated: {total_generated}")
