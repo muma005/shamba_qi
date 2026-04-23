@@ -70,22 +70,43 @@ def main():
                             "source_type": "transcript_segment"
                         })
 
-    # Batch 4: Skip segments used in Batch 1, 2, & 3
-    OFFSET = 435 
+    # Batch 5: Ingest new SSU exchanges and advance PDF offset
+    OFFSET = 498 
     segments = segments[OFFSET:]
+    
+    # Priority: Ingest ALL new SSU exchanges from extracted dir
+    ssu_exchanges = []
+    ssu_dir = os.path.join(EXTRACTED_DIR, "shamba_shape_up")
+    if os.path.exists(ssu_dir):
+        for f in os.listdir(ssu_dir):
+            if f.endswith(".jsonl"):
+                with open(os.path.join(ssu_dir, f), "r", encoding="utf-8") as f_in:
+                    for line in f_in:
+                        data = json.loads(line)
+                        ssu_exchanges.append({
+                            "source_ref": data["source_ref"],
+                            "crop_sw": data["crop_detected"],
+                            "raw_context": data["expert_text"],
+                            "source_type": "transcript_segment"
+                        })
+    
+    # Combine (SSU first for priority sampling)
+    combined_pool = ssu_exchanges + segments
     
     # Counters for distribution
     crop_counts = {c: 0 for c in CROP_VOCAB.keys()}
     total_generated = 0
+    maize_limit = 0.3
     
-    # Append mode for Batch 4
+    # Append mode for Batch 5
     with open(OUTPUT_PATH, "a", encoding="utf-8") as f_out:
-        for seg in segments:
+        for seg in combined_pool:
             crop = seg.get("crop_sw", "unknown")
             if crop not in CROP_VOCAB: continue
             
-            # Continue EXCLUDING Mahindi to balance the 30% cap
-            if crop == "Mahindi":
+            # Enforce 30% Maize Cap across total dataset
+            # (Approx check based on current total 1485)
+            if crop == "Mahindi" and (429 + crop_counts["Mahindi"]) / (1485 + total_generated + 1) > maize_limit:
                 continue
             
             patterns = generate_qa_patterns(seg)
@@ -101,14 +122,14 @@ def main():
                     "pest_disease_scientific": "TBD",
                     "category": seg.get("category", "general_management"),
                     "severity": "medium",
-                    "question_source": "constructed_from_pattern",
+                    "question_source": "transcript_segment" if seg.get("source_type") == "transcript_segment" else "constructed_from_pattern",
                     "dialect_variant": "standard"
                 }
                 f_out.write(json.dumps(qa_pair, ensure_ascii=False) + "\n")
                 crop_counts[crop] += 1
                 total_generated += 1
                 
-            if total_generated >= 500: break # Batch 4 target
+            if total_generated >= 515: break # Batch 5 target (Total 2,000)
 
     print(f"\nBatch 2 Execution Complete!")
     print(f"Total New QA Pairs Generated: {total_generated}")
