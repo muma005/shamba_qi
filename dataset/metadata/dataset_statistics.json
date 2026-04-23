@@ -1,1 +1,33 @@
-{}
+{
+  "total_pairs": 2003,
+  "crop_distribution": {
+    "Chai": 146,
+    "Mahindi": 703,
+    "Nyanya": 250,
+    "Kahawa": 110,
+    "Mpunga": 88,
+    "Ngano": 129,
+    "Maharage": 62,
+    "Vitunguu": 101,
+    "Ndizi": 108,
+    "Viazi": 224,
+    "Mihogo": 61,
+    "Mtama": 21
+  },
+  "category_distribution": {
+    "general_management": 144,
+    "fungal_disease": 1735,
+    "insect_pest": 103,
+    "viral_disease": 21
+  },
+  "severity_distribution": {
+    "medium": 594,
+    "low": 57,
+    "critical": 625,
+    "high": 727
+  },
+  "mean_question_length": 62,
+  "mean_answer_length": 4459,
+  "median_answer_length": 4389,
+  "status": "RELEASE_READY"
+}
