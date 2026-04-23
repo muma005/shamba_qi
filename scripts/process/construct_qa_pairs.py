@@ -49,13 +49,13 @@ def main():
     
     # Load all atomic segments
     segments = []
+    # ... (loading logic same as before)
     atomic_path = os.path.join(EXTRACTED_DIR, "atomic_segments.jsonl")
     if os.path.exists(atomic_path):
         with open(atomic_path, "r", encoding="utf-8") as f:
             for line in f:
                 segments.append(json.loads(line))
     
-    # SSU Exchanges
     ssu_dir = os.path.join(EXTRACTED_DIR, "shamba_shape_up")
     if os.path.exists(ssu_dir):
         for f in os.listdir(ssu_dir):
@@ -67,25 +67,24 @@ def main():
                             "source_ref": data["source_ref"],
                             "crop_sw": data["crop_detected"],
                             "raw_context": data["expert_text"],
-                            "source_type": "transcript_segment",
-                            "farmer_question": data["farmer_text"]
+                            "source_type": "transcript_segment"
                         })
 
+    # Batch 2: Skip the first ~170 segments used in Batch 1
+    OFFSET = 170 
+    segments = segments[OFFSET:]
+    
     # Counters for distribution
     crop_counts = {c: 0 for c in CROP_VOCAB.keys()}
     total_generated = 0
-    maize_limit = 0.3 # 30% Maize Cap
     
-    with open(OUTPUT_PATH, "w", encoding="utf-8") as f_out:
+    # Append mode for Batch 2
+    with open(OUTPUT_PATH, "a", encoding="utf-8") as f_out:
         for seg in segments:
             crop = seg.get("crop_sw", "unknown")
             if crop not in CROP_VOCAB: continue
             
-            # Enforce Maize Cap
-            if crop == "Mahindi" and (crop_counts["Mahindi"] / (total_generated + 1)) > maize_limit:
-                continue
-            
-            # Generate 2-3 variants
+            # Prioritize undersampled crops in this batch
             patterns = generate_qa_patterns(seg)
             
             for p in patterns:
@@ -93,7 +92,7 @@ def main():
                     "id": str(uuid.uuid4()),
                     "question_sw": p["question_sw"],
                     "answer_sw": p["answer_sw"],
-                    "question_en": None, # Will be filled by LLM pass
+                    "question_en": None, 
                     "answer_en": None,
                     "crop": crop,
                     "pest_disease_scientific": "TBD",
@@ -106,15 +105,10 @@ def main():
                 crop_counts[crop] += 1
                 total_generated += 1
                 
-            if total_generated >= 500: break # Batch 1
+            if total_generated >= 500: break # Batch 2 target
 
-    # Report
-    print(f"\nBatch 1 Execution Complete!")
-    print(f"Total QA Pairs Generated: {total_generated}")
-    print("\nCrop Distribution:")
-    for crop, count in crop_counts.items():
-        percent = (count / total_generated) * 100 if total_generated > 0 else 0
-        print(f"  {crop}: {count} ({percent:.1f}%)")
+    print(f"\nBatch 2 Execution Complete!")
+    print(f"Total New QA Pairs Generated: {total_generated}")
 
 if __name__ == "__main__":
     main()
